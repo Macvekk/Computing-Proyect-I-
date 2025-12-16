@@ -44,17 +44,17 @@ if __name__ == "__main__":
     main()"""
 
 
-from __future__ import annotations
+from __future__ import annotations # Permite usar list[str] sin problemas de versión
 
-import re
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterable
+import re                          # Expresiones regulares
+from dataclasses import dataclass  # Para crear clases de configuración simples
+from pathlib import Path           # Manejo moderno de rutas
+from typing import Iterable        # Tipado para colecciones
 
-import nltk
-import pandas as pd
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+import pandas as pd                # Manejo de datasets preventing
+import nltk                        # NLP básico
+from nltk.corpus import stopwords  # Stopwords
+from nltk.stem import WordNetLemmatizer  # Lematizador
 
 #------------------------------------------------
 #CONFIGURACIÓN
@@ -74,38 +74,40 @@ class TextCleaningConfig:
     language: str = "english"   # "english", "spanish", etc. (según NLTK)
     min_doc_length: int = 5     # Longitud mínima del texto final (caracteres)
     min_token_length: int = 2   # Longitud mínima de cada token
-    remove_numbers: bool = True
-    remove_urls: bool = True
+    keep_only_alpha: bool = True  # Mantener solo tokens alfabéticos
+    remove_numbers: bool = True # Eliminar tokens numéricos
+    remove_urls: bool = True # URLs
     remove_mentions: bool = True  # @usuario
-    to_lowercase: bool = True
+    to_lowercase: bool = True # Minúsculas
 
 #------------------------------------------------
 #NTLK SETUP
 #------------------------------------------------
 
 def setup_nltk(language: str = "english") -> None: # Descarga recursos necesarios de NLTK si no están
-    nltk.download("punkt", quiet=True)
-    nltk.download("stopwords", quiet=True)
-    nltk.download("wordnet", quiet=True)
+    nltk.download("punkt", quiet=True)       # Tokenizador
+    nltk.download("stopwords", quiet=True)   # Stopwords
+    nltk.download("wordnet", quiet=True)     # WordNet (lematización)
 # Si cambiamos a otro idioma, NLTK tiene qye tener las stopwords en ese idioma
-    stopwords.words(language)  # fuerza la descarga si falta
+    stopwords.words(language)  # fuerza la carga de stopwords del idioma
 
 #------------------------------------------------
 #FUNCIONES DE LIMPIEZA
 #------------------------------------------------
 
-URL_PATTERN = re.compile(r"https?://\S+|www\.\S+")
-MENTION_PATTERN = re.compile(r"@\w+")
-NON_ASCII_PATTERN = re.compile(r"[^\x00-\x7F]+")  # caracteres no ASCII
+URL_PATTERN = re.compile(r"https?://\S+|www\.\S+")         # URLs
+MENTION_PATTERN = re.compile(r"@\w+")                      # @usuario
+EMAIL_PATTERN = re.compile(r"\b[\w\.-]+@[\w\.-]+\.\w+\b")  # emails
+NON_ASCII_PATTERN = re.compile(r"[^\x00-\x7f]")            # emojis / unicode raro
 
 
 
 def normalize_text(text: str, cfg: TextCleaningConfig) -> str:
-#Aplica limpieza básica usando regex (antes del tokenizado).
-    if not isinstance(text, str):
+#Aplica limpieza básica antes del tokenizado (minisculas, URLs, menciones, etc.)
+    if not isinstance(text, str): # Si no es string (NaN, None, número) → texto vacío
         return ""
 
-    # minúsculas
+    # Convierte aminúsculas
     if cfg.to_lowercase:
         text = text.lower()
 
@@ -235,6 +237,8 @@ def run_dataset_pipeline(
 # =========================
 
 if __name__ == "__main__":
+
+    # Configuración del pipeline
     cfg = TextCleaningConfig(
         language="english",     
         min_doc_chars=5,
@@ -246,7 +250,7 @@ if __name__ == "__main__":
         remove_emails=True,
         remove_non_ascii=False,
     )
-
+# Ejecutar pipeline
     run_dataset_pipeline(
         input_path=INPUT_PATH,
         output_path=OUTPUT_PATH,
