@@ -1,36 +1,83 @@
 import pandas as pd
 import re
-from pathlib import Path
+import os
 
-# Ruta al dataset original
-INPUT_PATH = Path("data/raw/dataset.csv")
-OUTPUT_PATH = Path("data/clean/dataset_clean_raw.csv")
+# Subir el dataset
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def limpiar_texto(text: str) -> str:
-    if not isinstance(text, str):
-        return ""
+DATA_PATH = os.path.join(
+    BASE_DIR,
+    "..",
+    "reddit_depression_dataset",
+    "reddit_depression_dataset.csv"
+)
+
+df = pd.read_csv(
+    DATA_PATH,
+    dtype=str,
+    low_memory=False
+)
+
+print("Dataset cargado")
+
+# Eliminar filas con texto nulo
+df = df.dropna(subset=["body"])
+print("Filas con texto nulo eliminadas")
+
+# Eliminar duplicados
+df = df.drop_duplicates(subset=["body"])
+print("Filas duplicadas eliminadas")
+
+# Normalización del texto
+def basic_cleaning(text):
+    # Pasar a minúsculas
     text = text.lower()
-    text = re.sub(r"http\S+", "", text)        # URLs
-    text = re.sub(r"@\w+", "", text)          # menciones
-    text = re.sub(r"#[A-Za-z0-9_]+", "", text) # hashtags
-    text = re.sub(r"[^\w\s]", " ", text)      # signos raros
-    text = re.sub(r"\s+", " ", text)          # espacios múltiples
-    return text.strip()
 
-def main():
-    print(f"Cargando dataset desde {INPUT_PATH}...")
-    df = pd.read_csv(INPUT_PATH)
+    # Eliminar URLs
+    text = re.sub(r"http\S+|www\S+", "", text)
 
-    # Quitar duplicados y nulos
-    df.drop_duplicates(inplace=True)
-    df.dropna(subset=["text"], inplace=True)
+    # Eliminar markdown de Reddit
+    text = re.sub(r"\[.*?\]\(.*?\)", "", text)
 
-    # Aplicar limpieza
-    df["clean_text"] = df["text"].apply(limpiar_texto)
+    # Eliminar saltos de línea
+    text = re.sub(r"\n", " ", text)
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(OUTPUT_PATH, index=False)
-    print(f"Dataset limpio guardado en {OUTPUT_PATH}")
+    # Eliminar caracteres no alfabéticos
+    text = re.sub(r"[^a-z\s]", "", text)
 
-if __name__ == "__main__":
-    main()
+    # Eliminar espacios múltiples
+    text = re.sub(r"\s+", " ", text).strip()
+
+    return text
+
+df["clean_text"] = df["body"].apply(basic_cleaning)
+
+print("Limpieza estructural completada")
+
+# Eliminar los emojis
+def remove_emojis(text):
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # emoticonos
+        "\U0001F300-\U0001F5FF"  # símbolos y pictogramas
+        "\U0001F680-\U0001F6FF"  # transporte y mapas
+        "\U0001F1E0-\U0001F1FF"  # banderas
+        "]+",
+        flags=re.UNICODE
+    )
+    return emoji_pattern.sub("", text)
+
+df["clean_text"] = df["clean_text"].apply(remove_emojis)
+
+print("Emojis eliminados")
+
+# Eliminar comentarios de menos de 4 palabras
+MIN_WORDS = 4
+df = df[df["clean_text"].apply(lambda x: len(x.split()) >= MIN_WORDS)]
+print("comentarios de menos de 4 palabras eliminados")
+
+# Crear el archivo final con el texto limpio
+df_final = df[["clean_text", "label"]]
+df_final.to_csv("reddit_depression_clean.csv", index=False)
+
+print("Limpieza completada!!!")
