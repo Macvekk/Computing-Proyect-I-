@@ -30,6 +30,8 @@ if __name__ == "__main__":
     main()
 
 """
+Anotaciones sobre que hacer en embeddings_tfidf.py
+
 Cargar el CSV Limpio
 Configurar el vectorizado TF-IDF
 Generar la matriz de embeddings
