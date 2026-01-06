@@ -32,5 +32,3 @@ def main():
         pickle.dump(model, f)
     print(f"Modelo guardado en {model_path}")
 
-if __name__ == "__main__":
-    main()
