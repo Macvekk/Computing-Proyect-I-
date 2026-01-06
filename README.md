@@ -4,9 +4,9 @@
 
 
 Estructura básica del proyecto para empezar a trabajar en la parte técnica:
-- Limpieza de datos
-- Preprocesado de texto
-- Embeddings TF-IDF
-- Modelo básico de clasificación
+- Limpieza de datos (María)
+- Preprocesado de texto (Rodrigo)
+- Embeddings TF-IDF (José Luis)
+- Modelo básico de clasificación (Daniel)
 
 
