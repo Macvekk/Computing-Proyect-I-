@@ -1,47 +1,3 @@
-"""import pandas as pd
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from pathlib import Path
-
-INPUT_PATH = Path("data/clean/dataset_clean_raw.csv")
-OUTPUT_PATH = Path("data/processed/dataset_preprocessed.csv")
-
-def setup_nltk():
-    nltk.download("punkt", quiet=True)
-    nltk.download("stopwords", quiet=True)
-    nltk.download("wordnet", quiet=True)
-
-def procesar_texto(text: str, stop_words, lemmatizer) -> str:
-    if not isinstance(text, str):
-        return ""
-    tokens = nltk.word_tokenize(text)
-    tokens = [t for t in tokens if t.isalpha()]
-    tokens = [t for t in tokens if t not in stop_words]
-    tokens = [lemmatizer.lemmatize(t) for t in tokens]
-    return " ".join(tokens)
-
-def main():
-    setup_nltk()
-    print(f"Cargando dataset limpio desde {INPUT_PATH}...")
-    df = pd.read_csv(INPUT_PATH)
-
-    stop_words = set(stopwords.words("english"))
-    lemmatizer = WordNetLemmatizer()
-
-    df["processed_text"] = df["clean_text"].apply(
-        lambda x: procesar_texto(x, stop_words, lemmatizer)
-    )
-
-    # Filtrar textos demasiado cortos
-    df = df[df["processed_text"].str.len() > 5]
-
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(OUTPUT_PATH, index=False)
-    print(f"Dataset preprocesado guardado en {OUTPUT_PATH}")
-
-if __name__ == "__main__":
-    main()"""
 
 
 from __future__ import annotations # Permite usar list[str] sin problemas de versión
@@ -60,8 +16,11 @@ from nltk.stem import WordNetLemmatizer  # Lematizador
 #CONFIGURACIÓN
 #------------------------------------------------
 
-INPUT_PATH = Path("data/clean/dataset_clean_raw.csv")  # entrada
-OUTPUT_PATH = Path("data/processed/dataset_preprocessed.csv") # salida
+BASE_DIR = Path(__file__).resolve().parent
+
+INPUT_PATH = BASE_DIR / "data" / "reddit_depression_clean.csv"
+OUTPUT_PATH = BASE_DIR / "data" / "processed" / "dataset_preprocessed.csv"
+
 TEXT_COLUMN = "clean_text" # Columna de texto de entrada
 OUTPUT_TEXT_COLUMN = "processed_text" # Columna de texto de salida
 
@@ -85,7 +44,8 @@ class TextCleaningConfig:
 #------------------------------------------------
 
 def setup_nltk(language: str = "english") -> None: # Descarga recursos necesarios de NLTK si no están
-    nltk.download("punkt", quiet=True)       # Tokenizador
+    nltk.download("punkt", quiet=True) 
+    nltk.download("punkt_tab", quiet=True)      # Tokenizador
     nltk.download("stopwords", quiet=True)   # Stopwords
     nltk.download("wordnet", quiet=True)     # WordNet (lematización)
 # Si cambiamos a otro idioma, NLTK tiene qye tener las stopwords en ese idioma
@@ -216,20 +176,24 @@ def run_dataset_pipeline(
             f"No existe la columna '{text_column}'. "
             f"Columnas disponibles: {list(df.columns)}"
         )
+    print("[1/4] Leyendo dataset: Completado")
 
     print(f"[2/4] Inicializando cleaner (idioma stopwords: {cfg.language})")
     cleaner = TextCleaner(cfg)
+    print("[2/4] Inicializando cleaner: Completado")
 
     print(f"[3/4] Limpiando columna '{text_column}' -> '{output_text_column}'")
     df[output_text_column] = cleaner.clean_series(df[text_column])
+    print("[3/4] Limpiando columna")
 
-    print(f"[3b/4] Filtrando textos con menos de {cfg.min_doc_chars} caracteres")
-    df = df[df[output_text_column].str.len() >= cfg.min_doc_chars].copy()
+    print(f"[3b/4] Filtrando textos con menos de {cfg.min_doc_length} caracteres")
+    df = df[df[output_text_column].str.len() >= cfg.min_doc_length].copy()
+    print("[3b/4] Filtrando textos con menos de n caracteres")
 
     print(f"[4/4] Guardando salida: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_path, index=False)
-    print("✅ Listo.")
+    print("Listo.")
 
 
 # =========================
@@ -240,16 +204,15 @@ if __name__ == "__main__":
 
     # Configuración del pipeline
     cfg = TextCleaningConfig(
-        language="english",     
-        min_doc_chars=5,
-        min_token_len=2,
-        keep_only_alpha=True,
-        to_lowercase=True,
-        remove_urls=True,
-        remove_mentions=True,
-        remove_emails=True,
-        remove_non_ascii=False,
-    )
+    language="english",
+    min_doc_length=5,
+    min_token_length=2,
+    keep_only_alpha=True,
+    remove_numbers=True,
+    remove_urls=True,
+    remove_mentions=True,
+    to_lowercase=True,
+)
 # Ejecutar pipeline
     run_dataset_pipeline(
         input_path=INPUT_PATH,

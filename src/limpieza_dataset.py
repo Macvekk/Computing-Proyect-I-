@@ -7,8 +7,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATA_PATH = os.path.join(
     BASE_DIR,
-    "..",
-    "reddit_depression_dataset",
+    "data",
     "reddit_depression_dataset.csv"
 )
 
