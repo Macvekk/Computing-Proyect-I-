@@ -16,6 +16,7 @@ def main():
     if "label" not in df.columns:
         raise ValueError("La columna 'label' no existe en el dataset. Asegúrate de tener las etiquetas.")
 
+    #Tf-IDF Vectorizer configuración
     vectorizer = TfidfVectorizer(max_features=10000)
     X = vectorizer.fit_transform(df["processed_text"])
     y = df["label"]
