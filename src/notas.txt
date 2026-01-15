@@ -1,0 +1,18 @@
+
+General
+    bloque de código ¿0? que genere el arbol de carpetas que necesitamos (data/row)
+    comparar el tamaño del archivo inicial con el resultante tras aplicar las limpiezas
+    para la deteccion de ansiedad quiza es mejor no aplicar en la limpieza NLP (stopwords) las palabras como "not", "no", "never", "..."
+    si es posible ajustar el cleaner para preservar negaciones
+
+1_limpieza_dataset
+    definir correctamente el nombre del archivo entrante
+    defirnir correctamente el nombre del archivo resultante
+    definir correctamente la ruta donde guardar el archivo resultante
+    poner una excepcion si el fichero no existe
+
+2_pipeline_cleaner
+    mismo caso que 1_limpieza dataset
+    utilizar: un dataset --> un nombre -> una ruta definida --> una fase
+
+
